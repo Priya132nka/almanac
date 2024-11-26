@@ -166,7 +166,7 @@ class LDBA:
         delta = [{ap:n_qs-1 for ap in ap_list} for i in range(n_qs)]  # The default target of a transition is the trap state whose index is n_qs-1
         acc = [{ap:[None]*n_i for ap in ap_list} for i in range(n_qs)]  # The default acceptance value is None, meaning the transition does not belong to any acceptance set.
         eps = [[] for i in range(n_qs)]  # The epsilon moves in the OA. eps[q] is the list of states can be reached from `q` by making an epsilon-transition.
-        
+
         # Parse the transitions, acceptance values
         q=-1  # The state to be parsed
         for line in body_lines:
@@ -209,7 +209,6 @@ class LDBA:
                             if not(label_acc-set(ap)) and (label_rej-set(ap))==label_rej:  
                                 delta[q][ap] = dst
                                 acc[q][ap] = t_acc
-
         self.q0 = q0
         self.state = q0
         self.delta = [dict(zip([tuple(sorted(key)) for key in d.keys()], d.values())) for d in delta]
@@ -219,6 +218,11 @@ class LDBA:
         self.num_states = n_qs
         self.labels = set(flatten(self.delta[0].keys()))
         self.eps_actions = sorted(set(flatten(self.eps)))
+        print(self.delta)
+        print(self.acc)
+        print(self.eps_actions)
+        print(self.labels)
+        print(f"labels:{label_acc}")
 
     def get_num_states(self):
         

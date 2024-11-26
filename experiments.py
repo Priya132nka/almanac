@@ -11,6 +11,7 @@ import sys
 import torch
 import numpy as np
 import copy
+import os
 
 # Run experiment instance
 def run(hp, num, filename=None, modelname=None):
@@ -50,6 +51,7 @@ def run(hp, num, filename=None, modelname=None):
     # else:
     #     final_score = 0
     final_score = 0
+    print("score: {}".format(score_at_end))
     
     return trained, final_score, score_at_end
 
@@ -341,6 +343,12 @@ def exp1(state_size, num_actors, num_specs, run_num):
         best_hps['specs'] = spec
 
         filename = 'experiments/1/scores/almanac-{}-{}-{}-{}.txt'.format(state_size, num_actors, num_specs, run_num)
+        directory = os.path.dirname(filename)
+
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        with open(filename,'w') as f:
+            f.write(" ")
         # modelname = 'results/models/mmg/almanac-{}-{}-{}-{}.pickle'.format(state_size, num_actors, num_specs, run_num)
         # with open(filename, 'w') as f:
         #     f.write("State size: {}\n".format(state_size))

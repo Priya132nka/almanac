@@ -1,7 +1,8 @@
 ### Learners ###
 
 import torch
-import torch.tensor as tt
+# import torch.tensor as tt
+from torch import tensor as tt
 import random
 from torch import pow as power
 import time
@@ -141,6 +142,7 @@ def set_up_actors(parametrization, local, obs_size, act_sizes, hidden):
             actors = []
             for i in range(len(act_sizes)):
                 actor = DNN(obs_size, [act_sizes[i]], 'softmax', hidden)
+                print(f"act size of {i} : {act_sizes[i]}")
                 actors.append(actor)
         else:
             actors = [DNN(obs_size, act_sizes, 'softmax', hidden)]
@@ -324,9 +326,12 @@ class Almanac:
 
                 # Compute losses
                 patient_prediction = self.patient_critics[j](states.to(device)).to(device)
+                print(f"patient pred:{patient_prediction}")
                 with torch.no_grad():
                     patient_target = rewards.to(device) + (patient_discounts * self.patient_critics[j](next_states.to(device)) * (1-dones)).to(device)
+                print(f"patient target:{patient_target}")
                 values = self.patient_critics[j](unique_states)
+                print(f"values:{values}")
                 t_v_r = (sum_val_reg * torch.sum(torch.square(values))).to(device)
                 if len(unique_states) == 1:
                     patient_loss = self.lrs['critic'](e) * (t_v_r + (dist * (patient_prediction - patient_target)**2).mean()).to(device)
@@ -398,9 +403,11 @@ class Almanac:
                     with torch.no_grad():
                         patient_target = rewards.to(device) + (patient_discounts * self.patient_critics[j](next_states.to(device)) * (1-dones)).to(device) - self.patient_critics[j](states.to(device)).to(device)
                         hasty_target = rewards.to(device) + (self.discounts['hasty'] * self.hasty_critics[j](next_states.to(device)) * (1-dones)).to(device) - self.hasty_critics[j](states.to(device)).to(device)
+                    
                     patient_losses.append((self.specs[j].weight * (patient_dist * torch.square(prediction - torch.flatten(patient_target))).mean()).to(device))
                     hasty_losses.append((self.specs[j].weight * (hasty_dist * torch.square(prediction - torch.flatten(hasty_target))).mean()).to(device))
-
+                    print(f"patient losses: {patient_losses}")
+                    print(f"hasty losses: {hasty_losses}")
             # Form losses
             l = tt(0.0) if len(self.current_patient_losses[i]) == 0 else tt(self.current_patient_losses[i]).float().mean()
             loss_1 = sum(patient_losses)
@@ -481,6 +488,7 @@ class Almanac:
         else:
             if self.local: 
                 action_dists = [actor(state) for actor in self.actors]
+                # print(f"action_dists: ", action_dists)
                 if probs:
                     return [a[0] for a in action_dists]
                 else:
@@ -490,8 +498,8 @@ class Almanac:
                 action_dists = [joint_action_dists[i] for i in range(self.num_players)]
                 return [Categorical(a) for a in action_dists]
 
-    def train(self, steps, env, specs, actual_dist, patient_updates, train_constants, run_id, filename, score_interval=100):
-        
+    def train(self, steps, env, actual_dist, patient_updates, train_constants, run_id, filename, score_interval=100):
+        print("into training") 
         best = 0.0
         last_score_interval = deque(maxlen=score_interval)
 
@@ -545,13 +553,17 @@ class Almanac:
                 # Form state vectors 
                 spec_state_vectors = [one_hot(tt(spec_states_rewards[j][0]), self.specs[j].ldba.get_num_states()) for j in range(self.num_specs)]
                 prod_state = torch.cat([env.featurise(game_state)] + spec_state_vectors, 0)
-                
+                print(f"game_state: {game_state}")  
+                print(f"spec_states_rewards: {spec_states_rewards}")
+                print(f"spec_state_vectors: {spec_state_vectors}")        
                 # Perform joint action
                 if random.random() < epsilon(s):
                     joint_action = [tt(random.choice(range(act_size))) for act_size in self.act_sizes]
                 else:
+                    print(f"actions: {self.policy(prod_state)}")
                     joint_action = [actions.sample() for actions in self.policy(prod_state)]
-
+                # print(prod_state)
+                print(f"joint_action:", joint_action)   
                 # If an epsilon transition is made the game (and possibly spec) state remains the same 
                 is_e_t, j, e_t = self.is_epsilon_transition(joint_action)
                 if is_e_t:
@@ -573,7 +585,9 @@ class Almanac:
                 else:
                     new_game_state, done = env.step(joint_action)
                     label_set = env.label(new_game_state)
+                    print(label_set)
                     new_spec_states_rewards = [spec.ldba.step(label_set) for spec in self.specs]
+                    print(f"new_spec_states_rewards:{new_spec_states_rewards}")
                 
                 # Temporarily save new product state
                 if patient_updates:
@@ -582,8 +596,10 @@ class Almanac:
 
                 # Compute rewards etc. from environment and automata
                 unweighted_rewards = [reward_multiplier * s_r[1] for spec, s_r in zip(self.specs, new_spec_states_rewards)]
+                print(f"unweighted_rewards: {unweighted_rewards}")
                 discounts = [self.discounts['patient'] if r > 0.0 else 1.0 for r in unweighted_rewards]
                 gammas = [g * d for g, d in zip(gammas, discounts)]
+                print(f"gammas: {gammas}")
                 new_spec_state_vectors = [one_hot(tt(new_spec_states_rewards[j][0]), self.specs[j].ldba.get_num_states()) for j in range(self.num_specs)]
                 new_prod_state = torch.cat([env.featurise(new_game_state)] + new_spec_state_vectors, 0)
 
@@ -605,8 +621,12 @@ class Almanac:
                 # Update variables for next step
                 game_state = new_game_state
                 spec_states_rewards = new_spec_states_rewards
-
+                for spec in self.specs:
+                    print(spec.formula)
+                    print(spec.weight)
                 game_score += sum([r * spec.weight for r, spec in zip(unweighted_rewards, self.specs)])
+                
+                print(f"game score: {game_score}\n")
                 recent_game_score += sum([r * spec.weight for r, spec in zip(unweighted_rewards, self.specs)])
                 t += 1
                 s += 1
@@ -647,7 +667,7 @@ class Almanac:
                         # min_difference = min([min([torch.max(d) - torch.min(d) for d in v]) for v in self.policy_dists.values()])
                         # if min_difference > 0.999:
                         #     s = steps + 1
-
+            print(f"done: {done}")
             # If episode has ended use stored data for learning
             hasty_data = [self.hasty_buffer.sample(j, sample_all=True) for j in range(self.num_specs)]
             if patient_updates:
@@ -668,7 +688,7 @@ class Almanac:
                         keys = [tuple(tens.tolist()) for tens in data_state_actions]
                         new_pairs = [(k, tens) for k, tens in zip(keys, data_state_actions) if k not in self.scores[i].keys()]
                         self.scores[i].update(self.get_scores(i, new_pairs))
-                    
+            # print(f"self.scores: {self.scores}")        
             # Update critics and natural gradients
             self.update_critics(e, patient_data, hasty_data, continue_prob, sum_val_reg, c_neg_var_reg, max_critic_norm, actual_dist)
             self.update_nat_grads(e, hasty_data, continue_prob, max_nat_grad_norm, actual_dist)
@@ -840,7 +860,7 @@ class Almanac:
 
         return self.policy_dists
 
-    def test(self, steps, env, specs, actual_dist, patient_updates, train_constants, run_id, filename, score_interval=100):
+    def test(self, steps, env, specs, actual_dist, patient_updates, train_constants, run_id, score_interval=100):
         
         # best = 0.0
         # last_score_interval = deque(maxlen=score_interval)
@@ -849,8 +869,8 @@ class Almanac:
         #     first_50 = []
         #     on2awinner = False
 
-        if filename == None:
-            filename = '{}/scores/best-almanac-{}-{}.txt'.format(self.env_kind, self.env_name, run_id)
+        # if filename == None:
+        #     filename = 'test.txt'
 
         reward_multiplier = train_constants['reward_weight']
         # tolerance = train_constants['nat_grad_tolerance']

@@ -16,3 +16,8 @@ series = {AAMAS '21}}
 ```
 
 If you have any questions about the paper or the code, please feel free to [email me](mailto:lewis.hammond@cs.ox.ac.uk).
+
+To run a small example of the Markov game, execute the following Python script:
+```bash
+git checkout new_aamas
+python new_expr.py

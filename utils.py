@@ -39,17 +39,16 @@ def write_mmg_sh_files(experiment_name, range_repetitions, range_states, range_a
 
     filenames = []
 
-                    # if (s + a >= 10) or (s >= 7):
-                    mb = 16384
-                    gb = 16
-                    # else:
+    # if (s + a >= 10) or (s >= 7):
+    mb = 16384
+    gb = 16
+    # else:
                     #     mb = 4096
                     #     gb = 4
 
-                    filename = 'experiments/1/arc/{}/almanac-{}-{}-{}-{}.sh'.format(experiment_name,s,a,l,t)
-                    with open(filename, 'w') as f:
-
-                        f.write("#!/bin/bash\n\
+    filename = 'experiments/1/arc/{}/almanac-{}-{}-{}-{}.sh'.format(experiment_name,s,a,l,t)
+    with open(filename, 'w') as f:
+        f.write("#!/bin/bash\n\
 #SBATCH --partition=htc\n\
 #SBATCH --job-name={0}{1}{2}{3}\n\
 #SBATCH --output=/home/hert5888/almanac/logs/{6}-{0}-{1}-{2}-{3}.out\n\
@@ -74,8 +73,8 @@ prism -cuddmaxmem {5}g -javamaxmem {5}g -epsilon 0.001 -maxiters 100000 -timeout
 /home/hert5888/almanac/experiments/1/prism_evaluations/{6}/{0}-{1}-{2}-{3}-policy-det-0.txt\n\
 sleep 60\n".format(s,a,l,t,mb,gb,experiment_name))
 
-                        if l == 2:
-                            f.write("prism -cuddmaxmem {4}g -javamaxmem {4}g -epsilon 0.001 -maxiters 100000 -timeout 72000 /home/hert5888/almanac/experiments/1/prism_models/{6}/{0}-{1}-{2}-{3}-policy.prism \
+    if l == 2:
+        f.write("prism -cuddmaxmem {4}g -javamaxmem {4}g -epsilon 0.001 -maxiters 100000 -timeout 72000 /home/hert5888/almanac/experiments/1/prism_models/{6}/{0}-{1}-{2}-{3}-policy.prism \
     /home/hert5888/almanac/experiments/1/prism_specs/{6}/{0}-{1}-{2}-{3}.props -prop 3 > \
     /home/hert5888/almanac/experiments/1/prism_evaluations/{6}/{0}-{1}-{2}-{3}-policy-1.txt\n\
     sleep 60\n\
@@ -83,9 +82,9 @@ sleep 60\n".format(s,a,l,t,mb,gb,experiment_name))
     /home/hert5888/almanac/experiments/1/prism_specs/{6}/{0}-{1}-{2}-{3}.props -prop 3 > \
     /home/hert5888/almanac/experiments/1/prism_evaluations/{6}/{0}-{1}-{2}-{3}-policy-det-1.txt\n".format(s,a,l,t,gb))
 
-                        f.write("conda deactivate")
+    f.write("conda deactivate")
 
-                    filenames.append(filename)
+    filenames.append(filename)
 
     with open('experiments/1/arc/{}/multi.sh'.format(experiment_name), 'w') as f:
         f.write("#!/bin/bash\n")
@@ -107,7 +106,7 @@ def get_mmg_results(experiment_name, range_repetitions, range_states, range_acti
 
     for t in range_repetitions:    
         for s in range_states:
-            for a in range_actors:
+            for a in range_actions:                
                 for l in range_specs:
                 
                     key = (s,a,l,t)         
@@ -178,7 +177,7 @@ def get_mmg_results(experiment_name, range_repetitions, range_states, range_acti
 
     for t in range_repetitions:    
         for s in range_states:
-            for a in range_actors:
+            for a in range_actions:
                 for l in range_specs:
                     
                     key = (s,a,l,t)
@@ -196,7 +195,7 @@ def get_mmg_results(experiment_name, range_repetitions, range_states, range_acti
     averages = dict()
 
     for s in range_states:
-        for a in range_actors:
+        for a in range_actions:
             for l in range_specs:
 
                 key = (s,a,l)

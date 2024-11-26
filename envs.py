@@ -1,7 +1,7 @@
 ### Environments ###
 
 import random
-import torch.tensor as tt
+from torch import tensor as tt
 from torch.distributions import Categorical
 from torch.nn.functional import one_hot as one_hot
 import pickle
@@ -11,6 +11,7 @@ import torch
 import utils
 import numpy as np
 import specs
+import os
 
 # random.seed(26)
 
@@ -308,9 +309,10 @@ class MatrixMarkovGame:
         d = '' if det == False else '-det'
         if filename == None:
             filename = 'experiments/1/prism_models/{}-{}-{}-{}{}{}.prism'.format(self.state_size, len(self.action_sizes), len(ldbas), num, p, d)
-
+            directory = os.path.dirname(filename)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
         with open(filename, 'w') as f:
-            
             if policy == None:
                 f.write('mdp\n\n\n')
             else:

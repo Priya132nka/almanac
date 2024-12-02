@@ -10,6 +10,7 @@ import specs
 import os
 from environments import mg1
 from environments import mg2
+from environments import mg3
 
 # use GPU if available
 if torch.cuda.is_available():
@@ -153,4 +154,6 @@ class MarkovGame:
 mg_1 = MarkovGame(mg1.num_players, mg1.state_space, mg1.action_spaces, mg1.initial, mg1.transition, mg1.labeller)
 
 mg_2 = MarkovGame(mg2.num_players, mg2.state_space, mg2.action_spaces, mg2.initial, mg2.transition, mg2.labeller)
+
+mg_3 = MarkovGame(mg3.num_players, mg3.state_space, mg3.action_spaces, mg3.initial, mg3.transition, mg3.labeller)
 

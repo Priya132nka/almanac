@@ -318,6 +318,12 @@ class Almanac:
             if patient_experiences[j] != None:
 
                 ts, states, _, rewards, next_states, gammas, dones = patient_experiences[j]
+                print(f"j:{j}") 
+                print(f"ts:{ts}")
+                print(f"states:{states}")
+                print(f"rewards:{rewards}")
+                print(f"next_states:{next_states}")
+                print(f"gammas:{gammas}")
                 self.patient_critics[j].train()
 
                 # Form state dists and state-dependent discounts
@@ -396,6 +402,7 @@ class Almanac:
                         data_state_actions = torch.cat((states,joint_actions[i]), dim=1)
                     else:
                         data_state_actions = torch.cat((states,torch.cat(joint_actions, dim=1)), dim=1)
+                    print(f"data_state_actions: {data_state_actions}")
                     scores = torch.stack([self.scores[i][tuple(d_s_a.tolist())] for d_s_a in data_state_actions])
 
                     prediction = self.nat_grads[i](scores).to(device)
@@ -547,9 +554,10 @@ class Almanac:
             Z = [dict() for j in range(self.num_specs)]
             e += 1
             # print("End of episode, resetting...")
-
             while not random.random() > continue_prob and not done:
-
+                print(f"random.random(): {random.random()}")
+                print(f"continue_prob: {continue_prob}")
+                print(f"t: {t}")
                 # Form state vectors 
                 spec_state_vectors = [one_hot(tt(spec_states_rewards[j][0]), self.specs[j].ldba.get_num_states()) for j in range(self.num_specs)]
                 prod_state = torch.cat([env.featurise(game_state)] + spec_state_vectors, 0)
@@ -585,7 +593,7 @@ class Almanac:
                 else:
                     new_game_state, done = env.step(joint_action)
                     label_set = env.label(new_game_state)
-                    print(label_set)
+                    print(f"label_set:",label_set)
                     new_spec_states_rewards = [spec.ldba.step(label_set) for spec in self.specs]
                     print(f"new_spec_states_rewards:{new_spec_states_rewards}")
                 
@@ -672,11 +680,12 @@ class Almanac:
             hasty_data = [self.hasty_buffer.sample(j, sample_all=True) for j in range(self.num_specs)]
             if patient_updates:
                 patient_data = [self.patient_buffer.sample(j, sample_all=True) for j in range(self.num_specs)]
+                print(f"patient_data: {patient_data[0]}")
                 data = patient_data + hasty_data
             else:
                 patient_data = hasty_data
                 data = hasty_data
-
+            print(f"data: {data}")  
             # Compute new score functions
             for d in data:
                 if d != None:

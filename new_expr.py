@@ -149,10 +149,49 @@ exp_1_2 = { 'actor_neg_entropy_regulariser_weight': 0.1,
                         ('G F phi', 0.6) ],
             'steps': 1000 }
 
+exp_1_3 = { 'actor_neg_entropy_regulariser_weight': 0.1,
+            'actor_neg_variance_regulariser_weight': 5.0,
+            'actor_nondeterminism_regulariser_weight': 0.005,
+            'actual_state_dist': True,
+            'buffers': { 'size': 1000,
+                         'batch': 32 },
+            'continue_prob': 0.9,
+            'critic_sum_value_regulariser_weight': 0.5,
+            'critic_neg_variance_regulariser_weight': 0.5,
+            'discounts': { 'hasty': 0.8,
+                           'patient': 0.9 },
+            'env': new_envs.mg_3,
+            'env_name': 'exp1_mg3',
+            'env_type': 'mg',
+            'epsilon': lambda e: 0.1,
+            'nat_grad_l2_regulariser_weight': 0.001,
+            'labeller': new_envs.mg_3.label,
+            'learning_rates': { 'actor': ('constant', 0.05),
+                                'critic': ('constant', 0.1),
+                                'patient_nat_grad': ('constant', 0.1),
+                                'hasty_nat_grad': ('constant', 0.1),
+                                'mu': ('constant', 0.1) },
+            'local': True,
+            'nat_grad_convergence_tolerance': 0.05,
+            'max_critic_norm': 10.0,
+            'max_nat_grad_norm': 10.0,
+            'models': { 'actor': ('dnn', [16, 24, 16]),
+                        'critic': ('dnn', [16, 24, 16]) },
+            'model_id': None,
+            'optimisers': { 'actor': 'sgd',
+                            'nat_grad': 'sgd',
+                            'critic': 'sgd' },
+            'run_id': None,
+            'patient_updates': True,
+            'reward_weight': 1,
+            'specs': [ ('G (chi -> F psi)', 0.3),
+                        ('G F phi', 0.7) ],
+            'steps': 1000 }
+
 
 def expr():
     # run(exp_1_1)
-    completed,_,_ = run(exp_1_2)
+    completed,_,_ = run(exp_1_3)
     print("completed")
 
 if __name__ == '__main__':
